@@ -2,8 +2,11 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"strconv"
 )
+
+var ErrTaskNotFound = errors.New("задача не найдена")
 
 type Task struct {
 	ID      string `json:"id"`
@@ -42,6 +45,11 @@ func Tasks(limit int) ([]*Task, error) {
 		tasks = append(tasks, &t)
 	}
 
+	// Проверка: была ли ошибка в процессе итерации?
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
 	// Гарантируем, что если задач нет — вернём пустой слайс, а не nil
 	if tasks == nil {
 		tasks = []*Task{}
@@ -64,7 +72,7 @@ func GetTask(idStr string) (*Task, error) {
 	).Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
 
 	if err == sql.ErrNoRows {
-		return nil, sql.ErrNoRows
+		return nil, ErrTaskNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -114,7 +122,7 @@ func DeleteTask(idStr string) error {
 		return err
 	}
 	if count == 0 {
-		return sql.ErrNoRows
+		return ErrTaskNotFound
 	}
 
 	return nil
@@ -137,7 +145,7 @@ func UpdateDate(idStr, nextDate string) error {
 		return err
 	}
 	if count == 0 {
-		return sql.ErrNoRows
+		return ErrTaskNotFound
 	}
 
 	return nil

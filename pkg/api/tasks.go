@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/rizhyi/final-sprint/pkg/db"
@@ -17,9 +18,10 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	tasks, err := db.Tasks(maxLimit)
 	if err != nil {
-		writeJSON(w, map[string]string{"error": "ошибка получения задач"})
+		log.Printf("Ошибка получения задачи: %v", err)
+		writeJSON(w, map[string]string{"error": "ошибка получения задач"}, http.StatusInternalServerError)
 		return
 	}
 
-	writeJSON(w, TasksResp{Tasks: tasks})
+	writeJSON(w, TasksResp{Tasks: tasks}, http.StatusOK)
 }
